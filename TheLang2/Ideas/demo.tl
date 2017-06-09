@@ -1,6 +1,6 @@
-// TheLang is a fully type infered language. What this means is, that you write code in a 
-// staticly type language, but you never have to write a type.
-// How does this work? Can it even be usefull?
+// TheLang is a type inferred language. What this means is, that you write code in a 
+// statically type language, but you never have to write a type.
+// How does this work? Can it even be useful?
 // Well, let's take a look
 
 // First we define 'main'
@@ -10,11 +10,11 @@ main :: () => {
     // First, let's go over variable declaration.
     i: 1 // Declare a variable 'i' with the value '1'
 
-    // Note here, that we don't define the type. 'i' is infered to be an integer by the compiler.
+    // Note here, that we don't define the type. 'i' is inferred to be an integer by the compiler.
     // We can now also assign to this variable now that it is declared.
     i = 2
 
-    // We should here note, that "i = 2.0" will give an compiler error, as 'i' has already been declared as an integer.
+    // We should here note, that "i = 2.0" will give a compiler error, as 'i' has already been declared as an integer.
 
     // Now, let's go over all literals in the language.
     i: 100      // Integer literal (Type: i64)
@@ -24,7 +24,7 @@ main :: () => {
 
     // We don't have different sizes, such as i32 or f32 (yet, if ever)
 
-    // We can't do much with these types however. We need collections of values as well.
+    // We can't do much with these types, however. We need collections of values as well.
     // Let's start with arrays
     a: [4]{ 0 } // Declaring a variable 'a' which is an integer array
 
@@ -50,7 +50,7 @@ main :: () => {
     // q = struct(a: 2.0, b: 4) // Error, q has defined 'a' to be an int, but the new struct has 'a' as a float
     // q = struct(b: 8, a: 4)   // Error, names and order matters in structs "struct(a, b)" cannot be assigned to "struct(b, a)"
 
-    // For structs, we can access all it's fields through the '.' operator
+    // For structs, we can access all its fields through the '.' operator
     qa: q.a
     qb: q.b
     
@@ -106,7 +106,7 @@ main :: () => {
     st: struct(a: 0, b: 1, c: 2.0)
     arr: [2]{ 0 }
 
-    st_a: st.a             // Works on structs, and arrays, if the right side is "length"
+    st_a: st.a             // Works on structs, and arrays, if the right side is 'length'
     arr_length: arr.length
 
     // TODO: Do we want pointers or maybe a higher level construct?
@@ -127,8 +127,8 @@ main :: () => {
         // Do something
     }
 
-    // The basic if statement if fairly simple, but it has a few extra specialications that make it
-    // more usefull in certain scenarios.
+    // The basic if statement if fairly simple, but it has a few extra specialisations that make it
+    // more useful in certain scenarios.
     // Here, the if statement is used like a switch.
     some_int: 0
     
@@ -160,7 +160,7 @@ main :: () => {
     }
 
 
-    // Now, we haven't talked about procedures yet, but procedures can return multible values if they want.
+    // Now, we haven't talked about procedures yet, but procedures can return multiple values if they want.
     // This can be used for error handling, but when done like this, if statements cannot be used to
     // directly check the bool:
     success, result: parse("100b")
@@ -174,7 +174,7 @@ main :: () => {
         // use result
     }
 
-    // Since we don't use semi colon for statements, we decided to use it for this instead. 
+    // Since we don't use ';' for statements, we decided to use it for this instead. 
     // How this works is, that the 'if' statement will use the first returned value in the 'if',
     // and the rest are stored in the variables after ';'.
     // Note, that in this example, 'result' only exists inside the scope of the 'if' block.
@@ -202,9 +202,9 @@ main :: () => {
             // Handle unknown error
         }
     } else {
-        // Note here, that result does not exist in the else, but does
+        // Note here, that result does not exist in the else but does
         // exist in the default case above.
-        // This is the reason there is two ways of having a default case.
+        // This is the reason there are two ways of having a default case.
     }
 
 
@@ -247,8 +247,8 @@ main :: () => {
     //     sum += arr[item] + i_index 
     // }
 
-    // We should also here note, that "loop val1 .. val2" always increments val1 by 1, as long as va1 < val2.
-    // This means, that "loop 5 .. 4" will iterate until overflowing and then becomes 4
+    // We should also here note, that 'loop val1 .. val2' always increments val1 by 1, as long as va1 < val2.
+    // This means, that 'loop 5 .. 4' will iterate until overflowing and then becomes 4
 
     // loops can also iterate over collections that have a few procedures defined on them
     loop arr {
@@ -312,7 +312,7 @@ main :: () => {
         return y, x
     }
     
-    // These two procedures will collide when called with integer arguments. You will therefor get a compiler error, when
+    // These two procedures will collide when called with integer arguments. You will therefore get a compiler error, when
     // it is ambiguous what procedure to call.
 
     // There are, however, some procedures that you might thing are ambiguous, but that the compiler can handle, following a
@@ -326,8 +326,8 @@ main :: () => {
           add(1, 1) // first add
 
     // Here, the compiler will pick the correct procedure based on the return count, as it is the only way it was able
-    // to tell the procedures appart.
-    // One should be carefull of this though, as if the first add is deleted, the second add will be called in both 
+    // to tell the procedures apart.
+    // One should be careful of this though, as if the first add is deleted, the second add will be called in both 
     // cases, since return values can be ignored.
 
     // We can also overload operators
