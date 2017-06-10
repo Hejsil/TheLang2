@@ -56,11 +56,9 @@ namespace TheLang2.Syntax
         public bool EatToken(Predicate<Token> expected) => EatToken(expected(PeekToken()));
         public bool EatToken(Predicate<TokenKind> expected) => EatToken(expected(PeekToken().Kind));
 
-        public bool EatToken(bool eat = true)
+        public bool EatToken(bool eat) => eat && EatToken();
+        public bool EatToken()
         {
-            if (!eat)
-                return false;
-
             EatenToken = _tokenQueue.Count == 0 ? GetNextToken() : _tokenQueue.Dequeue();
             return true;
         }
@@ -80,9 +78,14 @@ namespace TheLang2.Syntax
             var position = new Position(_fileName, _line, _column);
             var startIndex = _index;
 
-            if (EatChar(c => char.IsLetter(c) || c == '_') )
+            if (EatChar(c => char.IsLetter(c) || c == '_' || c == '#'))
             {
-                while (EatChar(c => char.IsLetterOrDigit(c) || c == '_')) { }
+                while (EatChar(c => char.IsLetterOrDigit(c) || c == '_'))
+                { }
+
+
+                if (_program[startIndex] == '#')
+                    return new Token(position, TokenKind.Directive, GetValue(startIndex + 1));
 
                 var resultStr = GetValue(startIndex);
 
@@ -95,12 +98,16 @@ namespace TheLang2.Syntax
 
             if (EatChar(char.IsDigit))
             {
-                while (EatChar(c => char.IsDigit(c) || c == '_')) { }
+                while (EatChar(c => char.IsDigit(c) || c == '_'))
+                {
+                }
 
                 if (!EatChar('.'))
                     return new Token(position, TokenKind.DecimalNumber, GetValue(startIndex).Replace("_", ""));
 
-                while (EatChar(c => char.IsDigit(c) || c == '_')) { }
+                while (EatChar(c => char.IsDigit(c) || c == '_'))
+                {
+                }
 
                 return new Token(position, TokenKind.FloatNumber, GetValue(startIndex).Replace("_", ""));
             }
@@ -109,6 +116,16 @@ namespace TheLang2.Syntax
             EatChar();
             switch (eaten)
             {
+                case '&':
+                    if (EatChar('&'))
+                        return new Token(position, TokenKind.And);
+
+                    return new Token(position, TokenKind.Unknown, GetValue(startIndex));
+                case '|':
+                    if (EatChar('|'))
+                        return new Token(position, TokenKind.Or);
+
+                    return new Token(position, TokenKind.Unknown, GetValue(startIndex));
                 case '@':
                     return new Token(position, TokenKind.At);
                 case '+':
@@ -131,7 +148,9 @@ namespace TheLang2.Syntax
                 case '>':
                     return new Token(position, EatChar('=') ? TokenKind.GreaterThanEqual : TokenKind.GreaterThan);
                 case '!':
-                    return new Token(position, EatChar('=') ? TokenKind.ExclamationMarkEqual : TokenKind.ExclamationMark);
+                    return new Token(
+                        position,
+                        EatChar('=') ? TokenKind.ExclamationMarkEqual : TokenKind.ExclamationMark);
                 case '[':
                     return new Token(position, TokenKind.SquareLeft);
                 case ']':
@@ -154,7 +173,9 @@ namespace TheLang2.Syntax
                     if (!EatChar(char.IsDigit))
                         return new Token(position, EatChar('.') ? TokenKind.DotDot : TokenKind.Dot);
 
-                    while (EatChar(c => char.IsDigit(c) || c == '_')) { }
+                    while (EatChar(c => char.IsDigit(c) || c == '_'))
+                    {
+                    }
 
                     return new Token(position, TokenKind.FloatNumber, $"0{GetValue(startIndex).Replace("_", "")}");
 
@@ -189,7 +210,9 @@ namespace TheLang2.Syntax
                     {
                         Debug.Assert(EatChar('/'));
                         Debug.Assert(EatChar('/'));
-                        while (EatChar(c => c != NewLine)) { }
+                        while (EatChar(c => c != NewLine))
+                        {
+                        }
                         continue;
                     }
 
@@ -240,10 +263,12 @@ namespace TheLang2.Syntax
                 return true;
             }
 
-             _column++;
+            _column++;
             return true;
         }
 
-        private string GetValue(int startIndex, int indexOffset = 0) => _program.Substring(startIndex, (_index + indexOffset) - startIndex);
+        private string GetValue(int startIndex, int indexOffset = 0) => _program.Substring(
+            startIndex,
+            (_index + indexOffset) - startIndex);
     }
 }

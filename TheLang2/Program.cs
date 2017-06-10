@@ -1,5 +1,4 @@
 ﻿using System;
-using TheLang2.Syntax;
 
 namespace TheLang2
 {
@@ -7,7 +6,8 @@ namespace TheLang2
     {
         private static void Main(string[] args)
         {
-            var file = new Parser("Ideas\\array_list.tl").ParseFile();
+            var compiler = new Compiler();
+            compiler.Compile("Ideas\\Include\\test1.tl");
             Console.ReadLine();
         }
     }

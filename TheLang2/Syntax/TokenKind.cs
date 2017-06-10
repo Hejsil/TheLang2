@@ -32,6 +32,7 @@
         DotDot,
 
         Identifier,
+        Directive,
         FloatNumber,
         DecimalNumber,
         String,
@@ -66,6 +67,6 @@
         Comma,
 
         EndOfFile,
-        Unknown,
+        Unknown
     }
 }

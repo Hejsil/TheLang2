@@ -24,7 +24,7 @@ delete_list :: (list) => {
     delete list.data
 }
 
-[] :: (list, index) => {
+get :: (list, index) => {
     assert(0 <= index && index < list.count)
     return list.data[index]    
 }
