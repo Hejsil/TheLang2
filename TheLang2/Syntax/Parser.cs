@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using TheLang.Syntax;
 using TheLang2.AST;
 
 namespace TheLang2.Syntax
@@ -19,7 +17,7 @@ namespace TheLang2.Syntax
 
                 { typeof(ASTCall), new OpInfo(1, Associativity.LeftToRight) },
                 { typeof(ASTIndexing), new OpInfo(1, Associativity.LeftToRight) },
-                
+
                 { typeof(ASTNot), new OpInfo(2, Associativity.RightToLeft) },
 
                 { typeof(ASTTimes), new OpInfo(4, Associativity.LeftToRight) },
@@ -64,66 +62,41 @@ namespace TheLang2.Syntax
 
                 nodes.Add(node);
             }
-            
+
             return new ASTFile(startToken.Position) { Nodes = nodes };
         }
 
         private ASTProcedure ParseProcedure()
         {
-            if (!EatToken(TokenKind.Identifier))
-            {
-                var peek = PeekToken();
-                // TODO: Error
+            if (!EatExpect(TokenKind.Identifier))
                 return null;
-            }
 
             var identifier = EatenToken;
 
             // Eat the two next colons
-            if (!EatToken(TokenKind.Colon) || !EatToken(TokenKind.Colon))
-            {
-                var peek = PeekToken();
-                // TODO: Error
+            if (!EatExpect(TokenKind.Colon) ||
+                !EatExpect(TokenKind.Colon) ||
+                !EatExpect(TokenKind.ParenthesesLeft))
                 return null;
-            }
-
-            if (!EatToken(TokenKind.ParenthesesLeft))
-            {
-                var peek = PeekToken();
-                // TODO: Error
-                return null;
-            }
 
             var arguments = new List<ASTSymbol>();
             var first = true;
 
             while (!EatToken(TokenKind.ParenthesesRight))
             {
-                if (!first && !EatToken(TokenKind.Comma))
-                {
-                    var peek = PeekToken();
-                    // TODO: Error
+                if (!first && !EatExpect(TokenKind.Comma))
                     return null;
-                }
 
-                if (!EatToken(TokenKind.Identifier))
-                {
-                    var peek = PeekToken();
-                    // TODO: Error
+                if (!EatExpect(TokenKind.Identifier))
                     return null;
-                }
 
                 arguments.Add(new ASTSymbol(EatenToken.Position) { Name = EatenToken.Value });
 
                 first = false;
             }
 
-            if (!EatToken(TokenKind.Arrow))
-            {
-                var peek = PeekToken();
-                // TODO: Error
+            if (!EatExpect(TokenKind.Arrow))
                 return null;
-            }
 
             var scope = ParseScope();
 
@@ -140,12 +113,8 @@ namespace TheLang2.Syntax
 
         private ASTScope ParseScope()
         {
-            if (!EatToken(TokenKind.CurlyLeft))
-            {
-                var peek = PeekToken();
-                // TODO: Error
+            if (!EatExpect(TokenKind.CurlyLeft))
                 return null;
-            }
 
             var top = EatenToken;
 
@@ -165,65 +134,51 @@ namespace TheLang2.Syntax
 
         private ASTNode ParseDeclarationOrProcedure()
         {
-            if (PeekTokenIs(TokenKind.Identifier) && PeekTokenIs(TokenKind.Colon, 1))
-                return PeekTokenIs(TokenKind.Colon, 2) ? ParseProcedure() : ParseDeclaration();
+            if (!PeekExpect(TokenKind.Identifier))
+                return null;
 
-            var peek = PeekToken();
-            // TODO: Error
-            return null;
+            if (!PeekExpect(TokenKind.Colon, 1))
+                return null;
+            
+            return PeekTokenIs(TokenKind.Colon, 2) ? ParseProcedure() : ParseDeclaration();
         }
 
         private ASTNode ParseStatement()
         {
-            var peek = PeekToken();
+            if (PeekTokenIs(TokenKind.Identifier) && PeekTokenIs(TokenKind.Colon, 1))
+                return ParseDeclarationOrProcedure();
 
-            switch (peek.Kind)
+            if (PeekTokenIs(TokenKind.KeywordIf))
+                return ParseIfElseSequence();
+
+            if (PeekTokenIs(TokenKind.KeywordLoop))
+                return ParseLoop();
+
+            if (EatToken(TokenKind.KeywordBreak))
+                return new ASTBreak(EatenToken.Position);
+
+            if (EatToken(TokenKind.KeywordContinue))
+                return new ASTContinue(EatenToken.Position);
+
+            if (EatToken(TokenKind.KeywordDelete))
             {
-                case TokenKind.Identifier:
-                    return ParseDeclarationOrProcedure();
-
-                case TokenKind.KeywordIf:
-                    return ParseIfElseSequence();
-
-                case TokenKind.KeywordLoop:
-                    return ParseLoop();
-
-                case TokenKind.KeywordBreak:
-                    EatToken();
-                    return new ASTBreak(EatenToken.Position);
-
-                case TokenKind.KeywordContinue:
-                    EatToken();
-                    return new ASTContinue(EatenToken.Position);
-
-                case TokenKind.KeywordNew:
-                {
-                    EatToken();
-                    var expr = ParseExpression();
-                    return expr != null ? new ASTDelete(EatenToken.Position) { Expression = expr } : null;
-                }
-
-                case TokenKind.KeywordDelete:
-                {
-                    EatToken();
-                    var expr = ParseExpression();
-                    return expr != null ? new ASTDelete(EatenToken.Position) { Expression = expr } : null;
-                }
-
-                default:
-                    // TODO: Error
-                    return null;
+                var expr = ParseExpression();
+                return expr != null ? new ASTDelete(EatenToken.Position) { Expression = expr } : null;
             }
+
+            if (EatToken(TokenKind.KeywordReturn))
+            {
+                var expr = ParseExpression();
+                return expr != null ? new ASTReturn(EatenToken.Position) { Expression = expr } : null;
+            }
+
+            return ParseExpression();
         }
 
-        private ASTNode ParseCase()
+        private ASTCase ParseCase()
         {
-            if (!EatToken(TokenKind.KeywordCase))
-            {
-                var peek = PeekToken();
-                // TODO: Error
+            if (!EatExpect(TokenKind.KeywordCase))
                 return null;
-            }
 
             var expr = ParseExpression();
             if (expr == null)
@@ -238,12 +193,8 @@ namespace TheLang2.Syntax
 
         private ASTNode ParseLoop()
         {
-            if (!EatToken(TokenKind.KeywordLoop))
-            {
-                var peek = PeekToken();
-                // TODO: Error
+            if (!EatExpect(TokenKind.KeywordLoop))
                 return null;
-            }
 
             var top = EatenToken;
 
@@ -255,13 +206,24 @@ namespace TheLang2.Syntax
                     return null;
             }
 
+            ASTNode rangeEnd = null;
+            if (EatToken(TokenKind.DotDot))
+            {
+                rangeEnd = ParseExpression();
+                if (rangeEnd == null)
+                    return null;
+            }
+
             // TODO: Parse payload
 
             var scope = ParseScope();
             if (scope == null)
                 return null;
-
-            return new ASTLoop(top.Position) { Condition = expr, Scope = scope };
+            
+            if (rangeEnd == null)
+                return new ASTLoop(top.Position) { Condition = expr, Scope = scope };
+            else
+                return new ASTRangeLoop(top.Position) { RangeStart = expr, RangeEnd = rangeEnd, Scope = scope };
         }
 
         private ASTNode ParseIfElseSequence()
@@ -271,12 +233,8 @@ namespace TheLang2.Syntax
 
             do
             {
-                if (!EatToken(TokenKind.KeywordIf))
-                {
-                    var peek = PeekToken();
-                    // TODO: Error
+                if (!EatExpect(TokenKind.KeywordIf))
                     return null;
-                }
 
                 var ifTop = EatenToken;
 
@@ -295,28 +253,11 @@ namespace TheLang2.Syntax
 
                     while (!EatToken(TokenKind.CurlyRight))
                     {
-                        if (!EatToken(TokenKind.KeywordCase))
-                        {
-                            var peek = PeekToken();
-                            // TODO: Error
-                            return null;
-                        }
-
-                        var caseTop = EatenToken;
-
-                        ASTNode expr = null;
-                        if (!PeekTokenIs(TokenKind.CurlyLeft))
-                        {
-                            expr = ParseExpression();
-                            if (expr == null)
-                                return null;
-                        }
-
-                        var scope = ParseScope();
-                        if (scope == null)
+                        var cse = ParseCase();
+                        if (cse == null)
                             return null;
 
-                        cases.Add(new ASTCase(caseTop.Position) { Expression = expr, Scope = scope });
+                        cases.Add(cse);
                     }
 
                     ifs.Add(new ASTSwitch(ifTop.Position) { Condition = condition, Cases = cases });
@@ -346,22 +287,14 @@ namespace TheLang2.Syntax
 
         private ASTNode ParseDeclaration()
         {
-            if (!EatToken(TokenKind.Identifier))
-            {
-                var peek = PeekToken();
-                // TODO: Error
+            if (!EatExpect(TokenKind.Identifier))
                 return null;
-            }
 
             var identifier = EatenToken;
 
             // Eat the two next colons
-            if (!EatToken(TokenKind.Colon))
-            {
-                var peek = PeekToken();
-                // TODO: Error
+            if (!EatExpect(TokenKind.Colon))
                 return null;
-            }
 
             var expr = ParseExpression();
             if (expr == null)
@@ -387,10 +320,7 @@ namespace TheLang2.Syntax
 
                 OpInfo opInfo;
                 if (!OperatorInfo.TryGetValue(op.GetType(), out opInfo))
-                {
-                    // TODO: Better error
-                    return null;
-                }
+                    throw new NotImplementedException("Panic");
 
                 ASTNode prev = null;
                 var current = top;
@@ -453,15 +383,12 @@ namespace TheLang2.Syntax
             {
                 ASTUnary res;
 
-                if (PeekTokenIs(TokenKind.ExclamationMark))
-                {
-                    EatToken();
-                    res = new ASTNot(PeekToken().Position);
-                }
+                if (EatToken(TokenKind.ExclamationMark))
+                    res = new ASTNot(EatenToken.Position);
+                else if (EatToken(TokenKind.KeywordNew))
+                    res = new ASTNew(EatenToken.Position);
                 else
-                {
                     break;
-                }
 
                 if (topPrefix == null)
                 {
@@ -493,12 +420,8 @@ namespace TheLang2.Syntax
                     if (expr == null)
                         return null;
 
-                    if (!EatToken(TokenKind.SquareRight))
-                    {
-                        var peek = PeekToken();
-                        // TODO: Error
+                    if (!EatExpect(TokenKind.SquareRight))
                         return null;
-                    }
 
                     res = new ASTIndexing(PeekToken().Position) { Value = expr };
                 }
@@ -509,12 +432,8 @@ namespace TheLang2.Syntax
                     var arguments = new List<ASTNode>();
                     while (!EatToken(TokenKind.ParenthesesRight))
                     {
-                        if (arguments.Count != 0 && !EatToken(TokenKind.Comma))
-                        {
-                            var peek = PeekToken();
-                            // TODO: Error
+                        if (arguments.Count != 0 && !EatExpect(TokenKind.Comma))
                             return null;
-                        }
 
                         var argument = ParseExpression();
                         if (argument == null)
@@ -575,40 +494,24 @@ namespace TheLang2.Syntax
             {
                 var top = EatenToken;
 
-                if (!EatToken(TokenKind.ParenthesesLeft))
-                {
-                    var peek = PeekToken();
-                    // TODO: Error
+                if (!EatExpect(TokenKind.ParenthesesLeft))
                     return null;
-                }
 
                 var fields = new List<ASTStruct.Field>();
 
                 var first = true;
                 while (!EatToken(TokenKind.ParenthesesRight))
                 {
-                    if (!first && !EatToken(TokenKind.Comma))
-                    {
-                        var peek = PeekToken();
-                        // TODO: Error
+                    if (!first && !EatExpect(TokenKind.Comma))
                         return null;
-                    }
 
-                    if (!EatToken(TokenKind.Identifier))
-                    {
-                        var peek = PeekToken();
-                        // TODO: Error
+                    if (!EatExpect(TokenKind.Identifier))
                         return null;
-                    }
 
                     var identifier = EatenToken;
-                    
-                    if (!EatToken(TokenKind.Colon))
-                    {
-                        var peek = PeekToken();
-                        // TODO: Error
+
+                    if (!EatExpect(TokenKind.Colon))
                         return null;
-                    }
 
                     var expr = ParseExpression();
                     if (expr == null)
@@ -629,21 +532,47 @@ namespace TheLang2.Syntax
                 if (expr == null)
                     return null;
 
-                if (!EatToken(TokenKind.ParenthesesRight))
-                {
-                    var peek = PeekToken();
-                    // TODO: Error
+                if (!EatExpect(TokenKind.ParenthesesRight))
                     return null;
-                }
 
                 return new ASTParenthese(top.Position) { Child = expr };
             }
 
+            if (EatToken(TokenKind.SquareLeft))
             {
-                var peek = PeekToken();
-                // TODO: Error
-                return null;
+                var top = EatenToken;
+
+                var index = ParseExpression();
+                if (index == null)
+                    return null;
+
+                if (EatExpect(TokenKind.SquareRight) && EatExpect(TokenKind.CurlyLeft))
+                    return null;
+                
+                var values = new List<ASTNode>();
+
+                var first = true;
+                while (!EatToken(TokenKind.CurlyLeft))
+                {
+                    if (!first && !EatExpect(TokenKind.Comma))
+                        return null;
+
+                    var expr = ParseExpression();
+                    if (expr == null)
+                        return null;
+
+                    values.Add(expr);
+                    first = false;
+                }
+
+                return new ASTArray(top.Position) { Index = index, Values = values };
             }
+            
+            Error(
+                TokenKind.String, TokenKind.DecimalNumber, TokenKind.FloatNumber,
+                TokenKind.Identifier, TokenKind.KeywordStruct, TokenKind.ParenthesesLeft
+            );
+            return null;
         }
 
         private static ASTBinary MakeBinaryOperator(Token token)
@@ -685,12 +614,46 @@ namespace TheLang2.Syntax
             }
         }
 
-        private static readonly TokenKind[] TokenKinds = (TokenKind[])Enum.GetValues(typeof(TokenKind));
-            private static readonly IEnumerable<TokenKind> BinaryOperators =
-                TokenKinds
-                    .SkipWhile(t => t < TokenKind.Plus)
-                    .TakeWhile(t => t <= TokenKind.Dot);
+        public bool EatExpect(TokenKind kind, string hint = "")
+        {
+            if (EatToken(kind))
+                return true;
 
-            private static bool IsBinaryOperator(TokenKind kind) => BinaryOperators.Contains(kind);
+            Error(hint, kind);
+            return false;
+        }
+
+        public bool PeekExpect(TokenKind kind, int offset = 0, string hint = "")
+        {
+            if (PeekTokenIs(kind, offset))
+                return true;
+
+            Error(hint, kind);
+            return false;
+        }
+
+        public void Error(params TokenKind[] kind) => Error("", kind);
+        public void Error(string hint, params TokenKind[] kind)
+        {
+            var peek = PeekToken();
+            var position = peek.Position;
+
+            Console.Write($"{position.FileName}:{position.Line}:{position.Column}: Error: ");
+            Console.WriteLine($"Expected {string.Join(", ", kind)}, but got {peek.Kind}.");
+
+            if (!string.IsNullOrEmpty(hint))
+                Console.WriteLine($"Hint: {hint}");
+
+            throw new NotImplementedException();
+        }
+        
+        private static readonly TokenKind[] TokenKinds = (TokenKind[]) Enum.GetValues(typeof(TokenKind));
+
+        private static readonly IEnumerable<TokenKind> BinaryOperators =
+            TokenKinds
+                .SkipWhile(t => t < TokenKind.Plus)
+                .TakeWhile(t => t <= TokenKind.Dot);
+
+        private static bool IsBinaryOperator(TokenKind kind) => BinaryOperators.Contains(kind);
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace TheLang.Syntax
+﻿namespace TheLang2.Syntax
 {
     public enum Associativity
     {

@@ -1,6 +1,6 @@
-﻿using TheLang2.AST;
+﻿using TheLang2.Syntax;
 
-namespace TheLang2.Syntax
+namespace TheLang2.AST
 {
     internal class ASTFloat : ASTNode
     {

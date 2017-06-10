@@ -1,4 +1,6 @@
-﻿namespace TheLang2.Syntax
+﻿using TheLang2.Syntax;
+
+namespace TheLang2.AST
 {
     internal class ASTAdd : ASTBinary
     {

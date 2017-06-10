@@ -10,17 +10,17 @@ main :: () => {
         list.remove(last - (item * 2))
     }
 
-    list.delete()
+    list.delete_list()
 }
 
 make_list :: (default_values) => {
     return struct(
-        count: 0 
+        count: 0,
         data: new [2]{ default_values }
     )
 }
 
-delete :: (list) => {
+delete_list :: (list) => {
     delete list.data
 }
 

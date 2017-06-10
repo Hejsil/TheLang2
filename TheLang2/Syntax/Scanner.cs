@@ -27,8 +27,8 @@ namespace TheLang2.Syntax
             { "false", TokenKind.KeywordFalse },
             { "return", TokenKind.KeywordReturn },
             { "new", TokenKind.KeywordNew },
-            { "defer", TokenKind.KeywordDefer },
             { "delete", TokenKind.KeywordDelete },
+            { "defer", TokenKind.KeywordDefer },
             { "if", TokenKind.KeywordIf },
             { "else", TokenKind.KeywordElse },
             { "case", TokenKind.KeywordCase },
@@ -152,7 +152,7 @@ namespace TheLang2.Syntax
                     return new Token(position, TokenKind.Comma);
                 case '.':
                     if (!EatChar(char.IsDigit))
-                        return new Token(position, TokenKind.Dot);
+                        return new Token(position, EatChar('.') ? TokenKind.DotDot : TokenKind.Dot);
 
                     while (EatChar(c => char.IsDigit(c) || c == '_')) { }
 

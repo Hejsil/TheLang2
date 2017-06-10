@@ -28,6 +28,8 @@
         TimesEqual,
         DivideEqual,
         ModulusEqual,
+        
+        DotDot,
 
         Identifier,
         FloatNumber,
