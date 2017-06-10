@@ -1,0 +1,6 @@
+A:\Dev\Projects\TheLang2\TheLang2\bin\Debug\netcoreapp1.1\TheLang2.deps.json
+A:\Dev\Projects\TheLang2\TheLang2\bin\Debug\netcoreapp1.1\TheLang2.runtimeconfig.json
+A:\Dev\Projects\TheLang2\TheLang2\bin\Debug\netcoreapp1.1\TheLang2.runtimeconfig.dev.json
+A:\Dev\Projects\TheLang2\TheLang2\bin\Debug\netcoreapp1.1\TheLang2.dll
+A:\Dev\Projects\TheLang2\TheLang2\obj\Debug\netcoreapp1.1\TheLang2.csprojResolveAssemblyReference.cache
+A:\Dev\Projects\TheLang2\TheLang2\obj\Debug\netcoreapp1.1\TheLang2.AssemblyInfo.cs

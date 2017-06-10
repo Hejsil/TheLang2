@@ -1,4 +1,6 @@
-﻿namespace TheLang2.Syntax
+﻿using TheLang.Syntax;
+
+namespace TheLang2.Syntax
 {
     public struct OpInfo
     {

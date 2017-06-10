@@ -142,9 +142,13 @@ if parse_program() ; tree {
 ```
 
 #### Loop
-Next, we have loops.
+Next, we have loops. A simple infinit loop is simple.
+```C
+loop {
+    // Do something
+}
 ```
 
-```
+
 
 #### Procedure
